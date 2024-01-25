@@ -20,6 +20,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.graphics.tsaplots import plot_pacf
+import seaborn as sns
 
 ###########################################################
 ### fData()
@@ -38,51 +41,35 @@ def fData(lNames):
 ### fStationarity()
 def fStationarity(vData):
 
+    print('Augmented Dicky Fuller Test:')
     result = adfuller(vData)
-    print('ADF Statistic: %f' % result[0])
+    print('Statistic: %f' % result[0])
     print('p-value: %f' % result[1])
     print('Critical Values:')
     for key, value in result[4].items():
         print('\t%s: %.3f' % (key, value))
 
     if (result[1] <= 0.05) & (result[4]['5%'] > result[0]):
-        print("\u001b[32mStationary\u001b[0m")
+        print("Conclusion:", "\u001b[32mStationary\u001b[0m")
     else:
-        print("\x1b[31mNon-stationary\x1b[0m")
+        print("Conclusion:", "\x1b[31mNon-stationary\x1b[0m")
 
 
 
 ###########################################################
 ### ACF(mLogRet, iLags, mStats, boolAbs) = mAutoCORR
-def ACF(mLogRet, iLags, mStats, boolAbs):
-    """
-    Purpose:
-        Calculate an ACF for iLags amount of lags. The boolean input parameter
-        decides whether the absolute values of a series must be used.
-
-    Inputs:
-        mLogRet         matrix, filled with columns of log returns
-        iLags           integer, number of lags 
-        mStats          matrix, filled with stats about 3 log return columns
-        boolAbs         boolean, True when using absolute log returns and
-                        false otherwise
-                        
-    Return values:
-        mAutoCorr       iLags+1 x iK matrix, contains autocorrelations per column
-    """
-    iN, iK = mLogRet.shape
-    mAutoCov = np.zeros((iLags+1, iK))
-    mAutoCorr = np.zeros((iLags+1, iK))
+def fACF(vData):
     
-    if boolAbs == True:
-         mLogRet = np.abs(mLogRet)     
-    vMean = np.mean(mLogRet, axis=0)
+    plt.figure(dpi = 300)
+    sns.lineplot(np.array(range(1, len(vData) + 1)), vData, marker='o')
+    plt.tight_layout()
+    plt.show()
     
-    for i in range(iK):
-        vDemeaned = mLogRet[:,i]-vMean[i]
-        for k in range(iLags+1):
-            mAutoCov[k,i] = (1/iN)*(vDemeaned.T[k:iN] @ vDemeaned[:iN-k])
-            mAutoCorr[k,i] = mAutoCov[k,i] / mAutoCov[0,i]
+    f, ax = plt.subplots(nrows = 2, ncols = 1, dpi = 300)
+    plot_acf(vData, lags = 5, ax = ax[0])
+    plot_pacf(vData,lags = 5, ax = ax[1], method = 'ols')
+    plt.tight_layout()
+    plt.show()
 
     return mAutoCorr, mAutoCov
 
