@@ -23,7 +23,7 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.graphics.tsaplots import plot_pacf
 import seaborn as sns
-from statsmodels.tsa.ar_model import AutoReg, ar_select_order
+from statsmodels.tsa.ar_model import AutoReg
 import pmdarima as pm
 
 ###########################################################
