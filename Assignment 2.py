@@ -133,6 +133,15 @@ def fEstimation(vData):
 
     return dfPred, dfEva, best_model
 
+###########################################################
+### fStandard_Procedure()
+def fBox_Jenkins(vData):
+    
+    fStationarity(vData)
+    dfPred, dfEva, best_model = fEstimation(vData)
+    
+    return dfPred, dfEva, best_model
+
 ###############################################################
 ### main 
 def main():
@@ -140,7 +149,7 @@ def main():
     # Import datasets
     lNames = ['BicycleSales.xlsx', 'GasolineSales1.xlsx', 'GasolineSales2.xlsx', 'Umbrella.xlsx', 'DataAssignment1.xlsx', 'Sunspot.csv']
     vBike, vGas1, vGas2, vUmbrella, mDataAssignment1, vSun = fData(lNames)
-    dfPred, dfEva, best_model = fEstimation(vBike)
+    dfPred, dfEva, best_model = fBox_Jenkins(vBike)
     
     
 
