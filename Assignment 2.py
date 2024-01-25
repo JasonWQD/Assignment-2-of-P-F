@@ -23,6 +23,7 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.graphics.tsaplots import plot_pacf
 import seaborn as sns
+from statsmodels.tsa.ar_model import AutoReg, ar_select_order
 
 ###########################################################
 ### fData()
@@ -53,12 +54,12 @@ def fStationarity(vData):
         print("Conclusion:", "\u001b[32mStationary\u001b[0m")
     else:
         print("Conclusion:", "\x1b[31mNon-stationary\x1b[0m")
-
-
+    
+    return
 
 ###########################################################
-### ACF(mLogRet, iLags, mStats, boolAbs) = mAutoCORR
-def fACF(vData):
+### fACF_PACF()
+def fACF_PACF(vData):
     
     plt.figure(dpi = 300)
     sns.lineplot(np.array(range(1, len(vData) + 1)), vData, marker='o')
@@ -71,39 +72,31 @@ def fACF(vData):
     plt.tight_layout()
     plt.show()
 
-    return mAutoCorr, mAutoCov
+    return 
 
 ###########################################################
-### PACF(mYfull, iLags, boolAbs)
-def PACF(mYfull, iLags, boolAbs):
-    """
-    Purpose:
-        Calculate a PACF for iLags number of lags. The boolean input parameter
-        decides whether the absolute values of a series must be used.
+### fEstimation()
+def fEstimation(vData):
+    
+    vTrain = vData[: -6]
+    mod = AutoReg(vTrain, lags = 1, old_names = False)
+    res = mod.fit()
+    print(res.summary())
+    pred = res.predict(start = len(vTrain), end = len(vData) - 1, dynamic = False)
+    
+    f, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 4))
+    sns.lineplot(x=sample.timestamp[train_len:num_samples], y=sample.t[train_len:num_samples], marker='o', label='test', color='grey')
+    sns.lineplot(x=sample.timestamp[:train_len], y=train, marker='o', label='train')
+    sns.lineplot(x=sample.timestamp[train_len:num_samples], y=pred, marker='o', label='pred')
+    ax.set_xlim([sample.timestamp.iloc[0], sample.timestamp.iloc[-1]])
+    plt.tight_layout()
+    plt.show()
+    
+    
+    
+    
+    return 
 
-    Inputs:
-        mYfull          Matrix of time series in different columns
-        iLags           integer, number of lags to be used in PACF function             
-        boolAbs         boolean, True when using absolute log returns and
-                        false otherwise
-                        
-    Return values:
-        mPACF           (iLags + 1) x iK matrix, first value for each series is 0
-    """
-    (iN,iK) = mYfull.shape
-    mPACF = np.zeros((iLags+1,iK))
-                
-    if boolAbs == True:
-        mYfull = np.abs(mYfull)
-            
-    for i in range(iK):
-        for n in range(1,iLags+1):
-            (mX, vY) = CreateX_Y(n, 0, mYfull[:,i])
-            XtXi = np.linalg.inv(mX.T @ mX)
-            vB = XtXi @ mX.T @ vY
-            mPACF[n, i] = vB[-1]
-            
-    return mPACF
 ###############################################################
 ### main 
 def main():
