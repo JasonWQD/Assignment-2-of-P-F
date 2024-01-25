@@ -24,6 +24,7 @@ from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.graphics.tsaplots import plot_pacf
 import seaborn as sns
 from statsmodels.tsa.ar_model import AutoReg, ar_select_order
+import pmdarima as pm
 
 ###########################################################
 ### fData()
@@ -75,27 +76,62 @@ def fACF_PACF(vData):
     return 
 
 ###########################################################
-### fEstimation()
-def fEstimation(vData):
+### fPlotPredict()
+def fPlotPredict(vData, mPred):
     
-    vTrain = vData[: -6]
-    mod = AutoReg(vTrain, lags = 1, old_names = False)
-    res = mod.fit()
-    print(res.summary())
-    pred = res.predict(start = len(vTrain), end = len(vData) - 1, dynamic = False)
-    
-    f, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 4))
-    sns.lineplot(x=sample.timestamp[train_len:num_samples], y=sample.t[train_len:num_samples], marker='o', label='test', color='grey')
-    sns.lineplot(x=sample.timestamp[:train_len], y=train, marker='o', label='train')
-    sns.lineplot(x=sample.timestamp[train_len:num_samples], y=pred, marker='o', label='pred')
-    ax.set_xlim([sample.timestamp.iloc[0], sample.timestamp.iloc[-1]])
+    iN = len(vData)
+    iTrainlen = iN - 6
+    plt.figure(dpi = 300, figsize = (10, 6))
+    sns.lineplot(np.array(range(iTrainlen + 1, len(vData) + 1)), vData[iTrainlen: iN], marker='o', label = 'test', color = 'grey')
+    sns.lineplot(np.array(range(1, iTrainlen + 1)), vData[: -6], marker = 'o', label = 'train')
+    sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 0], marker = 'o', label = 'AR(1)')
+    sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 1], marker = 'o', label = 'MA(1)')
+    sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 2], marker = 'o', label = 'ARMA(1, 1)')
     plt.tight_layout()
     plt.show()
     
-    
-    
-    
     return 
+
+###########################################################
+### fEvaluation()
+def fEvaluation(vYt, vYt_hat):
+    
+    vUt = vYt - vYt_hat
+    dME = round(np.mean(vUt), 2)
+    dMAE = round(np.mean(np.abs(vUt)), 2)
+    dMAPE = round(100 * np.mean(np.divide(np.abs(vUt), np.abs(vYt))), 2)
+    dMSE = round(np.mean(vUt ** 2), 2)
+    
+    return dME, dMAE, dMAPE, dMSE
+
+###########################################################
+### fEstimation()
+def fEstimation(vData):
+    
+    # AR(1)
+    mPred = np.zeros((6, 3))
+    for i in range(6):
+        vTrain = vData[: i - 6]
+        AR = AutoReg(vTrain, lags = 1, old_names = False).fit()
+        MA = ARIMA(vTrain, order = (0, 0, 1)).fit()
+        ARMA = ARIMA(vTrain, order = (1, 0, 1)).fit()
+        mPred[i, 0] = AR.predict(start = len(vTrain), end = len(vTrain))
+        mPred[i, 1] = MA.predict(start = len(vTrain), end = len(vTrain))
+        mPred[i, 2] = ARMA.predict(start = len(vTrain), end = len(vTrain))
+    
+    dfPred = pd.DataFrame(mPred, columns = ['AR(1)', 'MA(1)', 'ARMA(1, 1)'])
+    fPlotPredict(vData, mPred)
+    
+    mEva = np.vstack((fEvaluation(vData[-len(mPred): ], mPred[:, 0]), fEvaluation(vData[-len(mPred): ], mPred[:, 1]), fEvaluation(vData[-len(mPred): ], mPred[:, 2])))
+    dfEva = pd.DataFrame(mEva, columns = ['ME' , 'MAE', 'MAPE', 'MSE'])
+    dfEva.index = ['AR(1)', 'MA(1)', 'ARMA(1, 1)']
+
+    best_model = pm.auto_arima(vData, d = 0, start_p = 0, start_q = 0, max_p = 5, 
+                  max_q = 5, max_d = 2, max_P = 4, max_Q = 4, 
+                  suppress_warnings = True, trace = True, 
+                  out_of_sample_size = 6, scoring = 'mse', stepwise = True)    
+
+    return dfPred, dfEva, best_model
 
 ###############################################################
 ### main 
@@ -104,7 +140,7 @@ def main():
     # Import datasets
     lNames = ['BicycleSales.xlsx', 'GasolineSales1.xlsx', 'GasolineSales2.xlsx', 'Umbrella.xlsx', 'DataAssignment1.xlsx', 'Sunspot.csv']
     vBike, vGas1, vGas2, vUmbrella, mDataAssignment1, vSun = fData(lNames)
-    
+    dfPred, dfEva, best_model = fEstimation(vBike)
     
     
 
