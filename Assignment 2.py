@@ -63,7 +63,7 @@ def fStationarity(vData):
 def fACF_PACF(vData):
     
     plt.figure(dpi = 300)
-    sns.lineplot(np.array(range(1, len(vData) + 1)), vData, marker='o')
+    sns.lineplot(x = np.array(range(1, len(vData) + 1)), y = vData, marker='o')
     plt.tight_layout()
     plt.show()
     
@@ -82,11 +82,11 @@ def fPlotPredict(vData, mPred, iPosition):
     iN = len(vData)
     iTrainlen = iN - iPosition
     plt.figure(dpi = 300, figsize = (10, 6))
-    sns.lineplot(np.array(range(iTrainlen + 1, len(vData) + 1)), vData[iTrainlen: iN], marker='o', label = 'test', color = 'grey')
-    sns.lineplot(np.array(range(1, iTrainlen + 1)), vData[: -iPosition], marker = 'o', label = 'train')
-    sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 0], marker = 'o', label = 'AR(1)')
-    sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 1], marker = 'o', label = 'MA(1)')
-    sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 2], marker = 'o', label = 'ARMA(1, 1)')
+    sns.lineplot(x = np.array(range(iTrainlen + 1, len(vData) + 1)), y = vData[iTrainlen: iN], marker='o', label = 'test', color = 'grey')
+    sns.lineplot(x = np.array(range(1, iTrainlen + 1)), y = vData[: -iPosition], marker = 'o', label = 'train')
+    sns.lineplot(x = np.array(range(iTrainlen + 1, iN + 1)), y = mPred[:, 0], marker = 'o', label = 'AR(1)')
+    sns.lineplot(x = np.array(range(iTrainlen + 1, iN + 1)), y = mPred[:, 1], marker = 'o', label = 'MA(1)')
+    sns.lineplot(x = np.array(range(iTrainlen + 1, iN + 1)), y = mPred[:, 2], marker = 'o', label = 'ARMA(1, 1)')
     plt.tight_layout()
     plt.show()
     
