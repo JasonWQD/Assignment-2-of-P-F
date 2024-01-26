@@ -81,7 +81,7 @@ def fPlotPredict(vData, mPred, iPosition):
     
     iN = len(vData)
     iTrainlen = iN - iPosition
-    plt.figure(dpi = 300, figsize = (10, 6))
+    plt.figure(dpi = 500, figsize = (10, 6))
     sns.lineplot(x = np.array(range(iTrainlen + 1, len(vData) + 1)), y = vData[iTrainlen: iN], marker='o', label = 'test', color = 'grey')
     sns.lineplot(x = np.array(range(1, iTrainlen + 1)), y = vData[: -iPosition], marker = 'o', label = 'train')
     sns.lineplot(x = np.array(range(iTrainlen + 1, iN + 1)), y = mPred[:, 0], marker = 'o', label = 'AR(1)')
@@ -125,9 +125,9 @@ def fEstimation(vData, iPosition):
     dfEva = pd.DataFrame(mEva, columns = ['ME' , 'MAE', 'MAPE', 'MSE'])
     dfEva.index = ['AR(1)', 'MA(1)', 'ARMA(1, 1)']
 
-    best_model = pm.auto_arima(vData, d = 0, start_p = 0, start_q = 0, max_p = 5, 
+    best_model = pm.auto_arima(vData, start_p = 0, start_q = 0, max_p = 5, 
                   max_q = 5, max_d = 2, max_P = 4, max_Q = 4, 
-                  suppress_warnings = True, trace = True, 
+                  suppress_warnings = True, trace = False, 
                   out_of_sample_size = 6, scoring = 'mse', stepwise = True)    
 
     return dfPred, dfEva, best_model
