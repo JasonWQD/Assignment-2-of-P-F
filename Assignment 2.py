@@ -77,13 +77,13 @@ def fACF_PACF(vData):
 
 ###########################################################
 ### fPlotPredict()
-def fPlotPredict(vData, mPred):
+def fPlotPredict(vData, mPred, iPosition):
     
     iN = len(vData)
-    iTrainlen = iN - 6
+    iTrainlen = iN - iPosition
     plt.figure(dpi = 300, figsize = (10, 6))
     sns.lineplot(np.array(range(iTrainlen + 1, len(vData) + 1)), vData[iTrainlen: iN], marker='o', label = 'test', color = 'grey')
-    sns.lineplot(np.array(range(1, iTrainlen + 1)), vData[: -6], marker = 'o', label = 'train')
+    sns.lineplot(np.array(range(1, iTrainlen + 1)), vData[: -iPosition], marker = 'o', label = 'train')
     sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 0], marker = 'o', label = 'AR(1)')
     sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 1], marker = 'o', label = 'MA(1)')
     sns.lineplot(np.array(range(iTrainlen + 1, iN + 1)), mPred[:, 2], marker = 'o', label = 'ARMA(1, 1)')
@@ -106,12 +106,11 @@ def fEvaluation(vYt, vYt_hat):
 
 ###########################################################
 ### fEstimation()
-def fEstimation(vData):
+def fEstimation(vData, iPosition):
     
-    # AR(1)
-    mPred = np.zeros((6, 3))
-    for i in range(6):
-        vTrain = vData[: i - 6]
+    mPred = np.zeros((iPosition, 3))
+    for i in range(iPosition):
+        vTrain = vData[: i - iPosition]
         AR = AutoReg(vTrain, lags = 1, old_names = False).fit()
         MA = ARIMA(vTrain, order = (0, 0, 1)).fit()
         ARMA = ARIMA(vTrain, order = (1, 0, 1)).fit()
@@ -120,7 +119,7 @@ def fEstimation(vData):
         mPred[i, 2] = ARMA.predict(start = len(vTrain), end = len(vTrain))
     
     dfPred = pd.DataFrame(mPred, columns = ['AR(1)', 'MA(1)', 'ARMA(1, 1)'])
-    fPlotPredict(vData, mPred)
+    fPlotPredict(vData, mPred, iPosition)
     
     mEva = np.vstack((fEvaluation(vData[-len(mPred): ], mPred[:, 0]), fEvaluation(vData[-len(mPred): ], mPred[:, 1]), fEvaluation(vData[-len(mPred): ], mPred[:, 2])))
     dfEva = pd.DataFrame(mEva, columns = ['ME' , 'MAE', 'MAPE', 'MSE'])
@@ -135,10 +134,10 @@ def fEstimation(vData):
 
 ###########################################################
 ### fStandard_Procedure()
-def fBox_Jenkins(vData):
+def fBox_Jenkins(vData, iPosition):
     
     fStationarity(vData)
-    dfPred, dfEva, best_model = fEstimation(vData)
+    dfPred, dfEva, best_model = fEstimation(vData, iPosition)
     
     return dfPred, dfEva, best_model
 
@@ -149,7 +148,10 @@ def main():
     # Import datasets
     lNames = ['BicycleSales.xlsx', 'GasolineSales1.xlsx', 'GasolineSales2.xlsx', 'Umbrella.xlsx', 'DataAssignment1.xlsx', 'Sunspot.csv']
     vBike, vGas1, vGas2, vUmbrella, mDataAssignment1, vSun = fData(lNames)
-    dfPred, dfEva, best_model = fBox_Jenkins(vBike)
+    
+    # iPosition means how many last forecasts you want to use for the performance evaluation
+    iPosition = 10
+    dfPred, dfEva, best_model = fBox_Jenkins(mDataAssignment1[:, 0], iPosition)
     
     
 
