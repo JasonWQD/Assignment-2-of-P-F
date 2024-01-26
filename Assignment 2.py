@@ -137,6 +137,7 @@ def fEstimation(vData, iPosition):
 def fBox_Jenkins(vData, iPosition):
     
     fStationarity(vData)
+    fACF_PACF(vData)
     dfPred, dfEva, best_model = fEstimation(vData, iPosition)
     
     return dfPred, dfEva, best_model
@@ -151,7 +152,7 @@ def main():
     
     # iPosition means how many last forecasts you want to use for the performance evaluation
     iPosition = 10
-    dfPred, dfEva, best_model = fBox_Jenkins(mDataAssignment1[:, 0], iPosition)
+    dfPred, dfEva, best_model = fBox_Jenkins(mDataAssignment1[:, 6], iPosition)
     
     
 
