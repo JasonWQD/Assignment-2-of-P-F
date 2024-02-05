@@ -184,6 +184,41 @@ def fVAREsti(mDataAssignment1):
     
     return dfEvaIn, dfEvaOut
 
+
+###########################################################
+### fVAREsti()
+def fAREsti(mDataAssignment1):
+    
+    mData = mDataAssignment1[:, -3:]
+    mDataDiff = np.diff(mData, axis = 0)
+    mTrain = mDataDiff[: -10]
+    mPredict = np.zeros((10, mDataDiff.shape[1]))
+    for i in range(10):
+        AR1 = AutoReg(mTrain[: 29 + i, 0], lags = 1, old_names = False).fit()
+        AR2 = AutoReg(mTrain[: 29 + i, 1], lags = 1, old_names = False).fit()
+        AR3 = AutoReg(mTrain[: 29 + i, 2], lags = 1, old_names = False).fit()
+        mPredict[i, 0] = AR1.predict(start = len(mTrain[: 29 + i, 0]), end = len(mTrain[: 29 + i, 0])) + mData[i + 29, 0]
+        mPredict[i, 1] = AR2.predict(start = len(mTrain[: 29 + i, 1]), end = len(mTrain[: 29 + i, 1])) + mData[i + 29, 1]
+        mPredict[i, 2] = AR3.predict(start = len(mTrain[: 29 + i, 2]), end = len(mTrain[: 29 + i, 2])) + mData[i + 29, 2]
+
+    vEvaVar7 = fEvaluation(mData[31: 41, 0], mPredict[:, 0])
+    vEvaVar8 = fEvaluation(mData[31: 41, 1], mPredict[:, 1])
+    vEvaVar9 = fEvaluation(mData[31: 41, 2], mPredict[:, 2])
+    dfEvaIn = pd.DataFrame(np.vstack((vEvaVar7, vEvaVar8, vEvaVar9)), columns = ['ME' , 'MAE', 'MAPE', 'MSE'])
+    dfEvaIn.index = ['Var 7', 'Var 8', 'Var 9']
+    
+    mPredictOut = np.zeros((10, 3))
+    mPredictOut[:, 0] = AR1.predict(start = len(mTrain) + 1, end = len(mDataDiff)) + mData[-11: -1, 0]
+    mPredictOut[:, 1] = AR2.predict(start = len(mTrain) + 1, end = len(mDataDiff)) + mData[-11: -1, 1]
+    mPredictOut[:, 2] = AR3.predict(start = len(mTrain) + 1, end = len(mDataDiff)) + mData[-11: -1, 2]
+    vEvaVar7Out = fEvaluation(mData[-10: , 0], mPredictOut[:, 0])
+    vEvaVar8Out = fEvaluation(mData[-10: , 1], mPredictOut[:, 1])
+    vEvaVar9Out = fEvaluation(mData[-10: , 2], mPredictOut[:, 2])
+    dfEvaOut = pd.DataFrame(np.vstack((vEvaVar7Out, vEvaVar8Out, vEvaVar9Out)), columns = ['ME' , 'MAE', 'MAPE', 'MSE'])
+    dfEvaOut.index = ['Var 7', 'Var 8', 'Var 9']
+    
+    return dfEvaIn, dfEvaOut
+
 ###############################################################
 ### main 
 def main():
@@ -194,11 +229,11 @@ def main():
     
     # iPosition means how many last forecasts you want to use for the performance evaluation
     iPosition = 10
-    dfPred, dfEva, best_model = fBox_Jenkins(mDataAssignment1[:, 2], iPosition)
+    dfPred, dfEva, best_model = fBox_Jenkins(mDataAssignment1[:, 8], iPosition)
     
     # Var7, Var8, and Var9 are selected
-    dfEvaIn, dfEvaOut = fVAREsti(mDataAssignment1)
-    
+    dfVAREvaIn, dfVAREvaOut = fVAREsti(mDataAssignment1)
+    dfAREvaIn, dfAREvaOut = fAREsti(mDataAssignment1)
 
 
 ###########################################################
